@@ -1,0 +1,7 @@
+__pycache__/
+.idea/
+.vs/
+.vscode/
+env/
+redirect.db
+globalConfig.py

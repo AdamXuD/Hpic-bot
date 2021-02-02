@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<head>
+    <link rel="icon" href="data:;base64,=">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"/>
+    <title>{{ title }}</title>
+</head>
+<html>
+    <body>
+        <h1>{{ title }}</h1>
+        <h2>author: {{ author }}</h2>
+        <p>tags:{{ tagStr }}</p>
+        <p>pid: {{ pid }}</p>
+        {% for imgUrl in imgList %}
+        <img style="display: inline-block; width: 100%; max-width: 100%; height: auto;" src="{{ imgUrl }}"/>
+        {% endfor %}
+    </body>
+</html>
