@@ -4,16 +4,21 @@ from quart import Quart, render_template
 import json
 from pixivpy3 import *
 import re
+import time
 import datetime
 from globalConfig import config
 
 from .webRoute import shortenUrl, getPicSearchByIdContent, getRankingContent
 
+api = ByPassSniApi()
+api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
+api.login(config["pixiv"]["username"], config["pixiv"]["password"])
+loginTime = time.time()
 
 async def searchPicById(context, replyFunc, logger, bot):
-    api = ByPassSniApi()
-    api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
-    api.login(config["pixiv"]["username"], config["pixiv"]["password"])
+    if time.time() - loginTime >= 3600:
+        api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
+        api.login(config["pixiv"]["username"], config["pixiv"]["password"])
 
     proxy = config["pixiv"]["pximgProxy"]
     pidReg = re.compile(config["regs"]["watchPixivIMG"])
@@ -56,9 +61,9 @@ async def searchPicById(context, replyFunc, logger, bot):
 
 
 async def getPixivRanking(context, replyFunc, logger, bot):
-    api = ByPassSniApi()
-    api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
-    api.login(config["pixiv"]["username"], config["pixiv"]["password"])
+    if time.time() - loginTime >= 3600:
+        api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
+        api.login(config["pixiv"]["username"], config["pixiv"]["password"])
 
     setting = config["pixiv"]
     rankingReg = re.compile(config["regs"]["watchPixivRanking"])
