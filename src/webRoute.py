@@ -20,11 +20,8 @@ async def redirect(shortenUrl: str):
 def dbCleanTask():
     dbInThread = sqlite3.connect("redirect.db")
     while True:
-        results = dbInThread.cursor().execute("SELECT id, ttl, createTime FROM redirect;").fetchall()
-        for item in results:
-            if time.time() - item[2] >= item[1]:
-                dbInThread.cursor().execute("DELETE FROM redirect WHERE id = ?;", (item[0], ))
-                dbInThread.commit()
+        dbInThread.cursor().execute("DELETE FROM redirect WHERE strftime('%s','now') - createTime >= ttl")
+        dbInThread.commit()
         time.sleep(10)
 
 
