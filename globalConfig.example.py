@@ -187,6 +187,8 @@ config = \
         "enable": True,
         # 是否允许r18 榜单 榜单 榜单 榜单
         "r18": False,
+        # p站登录的生存周期 p站登录后 超过这个时间会触发重新登录
+        "loginttl": 3600,
         # 图片代理（国内无法直接访问pixiv
         "pximgProxy": "i.pixiv.cat",
         # 使用p站功能需要账号密码

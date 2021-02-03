@@ -16,11 +16,12 @@ api.login(config["pixiv"]["username"], config["pixiv"]["password"])
 loginTime = time.time()
 
 async def searchPicById(context, replyFunc, logger, bot):
-    if time.time() - loginTime >= 3600:
+    setting = config["pixiv"]
+    if time.time() - loginTime >= setting["loginttl"]:
         api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
         api.login(config["pixiv"]["username"], config["pixiv"]["password"])
 
-    proxy = config["pixiv"]["pximgProxy"]
+    proxy = setting["pximgProxy"]
     pidReg = re.compile(config["regs"]["watchPixivIMG"])
     pidSearch = pidReg.search(context.message)
     if pidSearch:
@@ -61,11 +62,11 @@ async def searchPicById(context, replyFunc, logger, bot):
 
 
 async def getPixivRanking(context, replyFunc, logger, bot):
-    if time.time() - loginTime >= 3600:
+    setting = config["pixiv"]
+    if time.time() - loginTime >= setting["loginttl"]:
         api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
         api.login(config["pixiv"]["username"], config["pixiv"]["password"])
 
-    setting = config["pixiv"]
     rankingReg = re.compile(config["regs"]["watchPixivRanking"])
     rankingSearch = rankingReg.search(context.message)
     proxy = setting["pximgProxy"]
