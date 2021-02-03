@@ -6,24 +6,10 @@ from threading import Thread
 
 from globalConfig import config
 
-db = sqlite3.connect("redirect.db")
-db.cursor().execute("""
-    CREATE TABLE IF NOT EXISTS redirect (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    shortenUrl STRING  UNIQUE
-                       NOT NULL,
-    content    TEXT  NOT NULL,
-    ttl        INTEGER NOT NULL,
-    createTime INTEGER NOT NULL
-);
-""")
+db = None
 
-
-def webRouteStart(app):
-    app.template_folder = "./template/"
-
-    @app.route("/<shortenUrl>")
-    async def redirect(shortenUrl: str):
+async def redirect(shortenUrl: str):
+    if db:
         result = db.cursor().execute("SELECT content FROM redirect WHERE shortenUrl = ?;", (shortenUrl,)).fetchone()
         if result:
             return Response(result[0], status=200)
@@ -31,17 +17,15 @@ def webRouteStart(app):
             return Response(await render_template("404.html", reason="该页面已失效"), status=404)
 
 
-    def dbCleanTask():
-        dbInThread = sqlite3.connect("redirect.db")
-        while True:
-            results = dbInThread.cursor().execute("SELECT id, ttl, createTime FROM redirect;").fetchall()
-            for item in results:
-                if time.time() - item[2] >= item[1]:
-                    dbInThread.cursor().execute("DELETE FROM redirect WHERE id = ?;", (item[0], ))
-                    dbInThread.commit()
-            time.sleep(10)
-
-    Thread(target=dbCleanTask).start()
+def dbCleanTask():
+    dbInThread = sqlite3.connect("redirect.db")
+    while True:
+        results = dbInThread.cursor().execute("SELECT id, ttl, createTime FROM redirect;").fetchall()
+        for item in results:
+            if time.time() - item[2] >= item[1]:
+                dbInThread.cursor().execute("DELETE FROM redirect WHERE id = ?;", (item[0], ))
+                dbInThread.commit()
+        time.sleep(10)
 
 
 def getShortenUrl(length):
@@ -69,10 +53,28 @@ async def getRankingContent(imgList, queryType):
 
 
 async def shortenUrl(content: str):
-    ttl = config["webRoute"]["ttl"]
-    length = config["webRoute"]["urlLength"]
-    shortenUrl = getShortenUrl(length)
-    db.cursor().execute("INSERT INTO redirect VALUES(NULL, ?, ?, ?, ?);", (shortenUrl, content, ttl, time.time()))
-    db.commit()
-    return "http://{0}:{1}/{2}".format(config["webRoute"]["apiAddress"], config["cq-reservsews"]["port"], shortenUrl)
+    if db:
+        ttl = config["webRoute"]["ttl"]
+        length = config["webRoute"]["urlLength"]
+        shortenUrl = getShortenUrl(length)
+        db.cursor().execute("INSERT INTO redirect VALUES(NULL, ?, ?, ?, ?);", (shortenUrl, content, ttl, time.time()))
+        db.commit()
+        return "http://{0}:{1}/{2}".format(config["webRoute"]["apiAddress"], config["cq-reservsews"]["port"], shortenUrl)
 
+
+def webRouteStart(app):
+    global db
+    app.template_folder = "./template/"
+    app.route("/<shortenUrl>")(redirect)
+    Thread(target=dbCleanTask, daemon=True).start()
+    db = sqlite3.connect("redirect.db")
+    db.cursor().execute("""
+        CREATE TABLE IF NOT EXISTS redirect (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        shortenUrl STRING  UNIQUE
+                           NOT NULL,
+        content    TEXT  NOT NULL,
+        ttl        INTEGER NOT NULL,
+        createTime INTEGER NOT NULL
+    );
+    """)

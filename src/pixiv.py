@@ -10,21 +10,26 @@ from globalConfig import config
 
 from .webRoute import shortenUrl, getPicSearchByIdContent, getRankingContent
 
-api = ByPassSniApi()
-api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
-api.login(config["pixiv"]["username"], config["pixiv"]["password"])
-loginTime = time.time()
+api = None
+loginTime = None
+
+def loginToPixiv():
+    global api, loginTime
+    api = ByPassSniApi()
+    api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
+    api.login(config["pixiv"]["username"], config["pixiv"]["password"])
+    loginTime = time.time()
+
 
 async def searchPicById(context, replyFunc, logger, bot):
     setting = config["pixiv"]
-    if time.time() - loginTime >= setting["loginttl"]:
-        api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
-        api.login(config["pixiv"]["username"], config["pixiv"]["password"])
-
     proxy = setting["pximgProxy"]
     pidReg = re.compile(config["regs"]["watchPixivIMG"])
     pidSearch = pidReg.search(context.message)
+
     if pidSearch:
+        if api == None or time.time() - loginTime >= setting["loginttl"]:
+            loginToPixiv()
         pidGroupDict = pidSearch.groupdict()
         pid = int(pidGroupDict["pid"])
 
@@ -63,15 +68,13 @@ async def searchPicById(context, replyFunc, logger, bot):
 
 async def getPixivRanking(context, replyFunc, logger, bot):
     setting = config["pixiv"]
-    if time.time() - loginTime >= setting["loginttl"]:
-        api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
-        api.login(config["pixiv"]["username"], config["pixiv"]["password"])
-
     rankingReg = re.compile(config["regs"]["watchPixivRanking"])
     rankingSearch = rankingReg.search(context.message)
     proxy = setting["pximgProxy"]
 
     if rankingSearch:
+        if api == None or time.time() - loginTime >= setting["loginttl"]:
+            loginToPixiv()
         rankingGroupDict = rankingSearch.groupdict()
         r18 = rankingGroupDict["r18"]
         type = rankingGroupDict["type"]
@@ -137,7 +140,11 @@ async def getPixivRanking(context, replyFunc, logger, bot):
                         result["imgUrl"] = resultItem["image_urls"]["large"]
                     imgList.append(result)
                 url = await shortenUrl(await getRankingContent(imgList, queryType))
-                await replyFunc(bot, context, url, True, True)
+                msg = ""
+                if dateStr == None:
+                    msg += "未指定日期，自动获取{}的{}榜单哦~\n"
+                msg += url
+                await replyFunc(bot, context, msg, True, True)
                 return True
             else:
                 msgText = "请求{0}的{1}榜单失败，可能是该日期的榜单还未更新，试着用“惠酱来份p站榜单 date:yyyy-mm-dd”的格式指定日期检索榜单吧~".format(date, type)
@@ -150,4 +157,4 @@ async def getPixivRanking(context, replyFunc, logger, bot):
         return False
 
 
-
+loginToPixiv()
