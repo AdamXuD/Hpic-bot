@@ -9,11 +9,12 @@ from globalConfig import config
 
 from .webRoute import shortenUrl, getPicSearchByIdContent, getRankingContent
 
-api = ByPassSniApi()
-api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
-api.login(config["pixiv"]["username"], config["pixiv"]["password"])
 
 async def searchPicById(context, replyFunc, logger, bot):
+    api = ByPassSniApi()
+    api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
+    api.login(config["pixiv"]["username"], config["pixiv"]["password"])
+
     proxy = config["pixiv"]["pximgProxy"]
     pidReg = re.compile(config["regs"]["watchPixivIMG"])
     pidSearch = pidReg.search(context.message)
@@ -45,7 +46,7 @@ async def searchPicById(context, replyFunc, logger, bot):
             url = await shortenUrl(await getPicSearchByIdContent(title, author, tagStr, pid, imgList))
             await replyFunc(bot, context, url, True, True)
             return True
-        elif result.get["error"]:
+        elif result.get("error"):
             errMsg = result["error"]["user_message"]
             await replyFunc(bot, context, errMsg, True, True)
             return True
@@ -55,6 +56,10 @@ async def searchPicById(context, replyFunc, logger, bot):
 
 
 async def getPixivRanking(context, replyFunc, logger, bot):
+    api = ByPassSniApi()
+    api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
+    api.login(config["pixiv"]["username"], config["pixiv"]["password"])
+
     setting = config["pixiv"]
     rankingReg = re.compile(config["regs"]["watchPixivRanking"])
     rankingSearch = rankingReg.search(context.message)
@@ -96,25 +101,42 @@ async def getPixivRanking(context, replyFunc, logger, bot):
         if r18:
             mode += "_r18"
 
-        nowTime = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
-        result = api.illust_ranking(mode=mode, date=dateStr if dateStr else nowTime)
-        if result and result["illusts"]:
-            imgList = []
-            queryType = (dateStr if dateStr else "") + type + "榜"
-            for resultItem in result["illusts"]:
-                result = {
-                    "title" : resultItem["title"],
-                    "author" : resultItem["user"]["name"],
-                    "pid" : resultItem["id"]
-                }
-                if proxy:
-                    result["imgUrl"] = resultItem["image_urls"]["large"].replace("i.pximg.net", proxy)
-                else:
-                    result["imgUrl"] = resultItem["image_urls"]["large"]
-                imgList.append(result)
-            url = await shortenUrl(await getRankingContent(imgList, queryType))
-            await replyFunc(bot, context, url, True, True)
-            return True
+        date = ""
+        if dateStr:
+            date = dateStr
+        else:
+            if mode.find("day") != -1:
+                date = (datetime.datetime.now() - datetime.timedelta(days=2)).strftime('%Y-%m-%d')
+            elif mode.find("week") != -1:
+                date = (datetime.datetime.now() - datetime.timedelta(weeks=1)).strftime('%Y-%m-%d')
+            elif mode.find("month") != -1:
+                date = (datetime.datetime.now() - datetime.timedelta(weeks=4)).strftime('%Y-%m-%d')
+            else:
+                date = (datetime.datetime.now() - datetime.timedelta(days=2)).strftime('%Y-%m-%d')
+
+        result = api.illust_ranking(mode=mode, date=date)
+        if result:
+            if result.get("illusts"):
+                imgList = []
+                queryType = date + type + "榜"
+                for resultItem in result["illusts"]:
+                    result = {
+                        "title" : resultItem["title"],
+                        "author" : resultItem["user"]["name"],
+                        "pid" : resultItem["id"]
+                    }
+                    if proxy:
+                        result["imgUrl"] = resultItem["image_urls"]["large"].replace("i.pximg.net", proxy)
+                    else:
+                        result["imgUrl"] = resultItem["image_urls"]["large"]
+                    imgList.append(result)
+                url = await shortenUrl(await getRankingContent(imgList, queryType))
+                await replyFunc(bot, context, url, True, True)
+                return True
+            else:
+                msgText = "请求{0}的{1}榜单失败，可能是该日期的榜单还未更新，试着用“惠酱来份p站榜单 date:yyyy-mm-dd”的格式指定日期检索榜单吧~".format(date, type)
+                await replyFunc(bot, context, msgText, True, True)
+                return True
         else:
             await replyFunc(bot, context, "榜单模块查询错误~", True, True)
             return True
