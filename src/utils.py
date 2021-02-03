@@ -11,7 +11,7 @@ def isAtMe(context):
     return False
 
 
-def startSchedule(second, func):
+def startTimer(second, func):
     t = Timer(second, func)
     t.start()
     return t

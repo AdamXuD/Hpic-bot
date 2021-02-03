@@ -19,10 +19,8 @@ async def redirect(shortenUrl: str):
 
 def dbCleanTask():
     dbInThread = sqlite3.connect("redirect.db")
-    while True:
-        dbInThread.cursor().execute("DELETE FROM redirect WHERE strftime('%s','now') - createTime >= ttl")
-        dbInThread.commit()
-        time.sleep(10)
+    dbInThread.cursor().execute("DELETE FROM redirect WHERE strftime('%s','now') - createTime >= ttl")
+    dbInThread.commit()
 
 
 def getShortenUrl(length):
@@ -59,11 +57,11 @@ async def shortenUrl(content: str):
         return "http://{0}:{1}/{2}".format(config["webRoute"]["apiAddress"], config["cq-reservsews"]["port"], shortenUrl)
 
 
-def webRouteStart(app):
+def webRouteStart(app, scheduler):
     global db
     app.template_folder = "./template/"
     app.route("/<shortenUrl>")(redirect)
-    Thread(target=dbCleanTask, daemon=True).start()
+    scheduler.add_job(dbCleanTask, "interval", minutes=1, max_instances=10)
     db = sqlite3.connect("redirect.db")
     db.cursor().execute("""
         CREATE TABLE IF NOT EXISTS redirect (

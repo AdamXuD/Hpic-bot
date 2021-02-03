@@ -1,7 +1,8 @@
-from .utils import startSchedule
+from .utils import startTimer
 from globalConfig import modeDict
 
 import time
+from apscheduler.schedulers.background import BackgroundScheduler
 
 
 def getKey(uid, groupid):
@@ -19,10 +20,17 @@ class Logger:
 	searchCountLimit = -20
 	# 返回值表
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self):
 		self.searchCount = {}
+		self._scheduler = BackgroundScheduler()
+		self._scheduler.start()
 
-		startSchedule(86400, lambda: self.searchCount.clear())
+		# self.scheduler.add_job(lambda: self.searchCount.clear(), "interval", days=1)
+
+
+	@property
+	def scheduler(self):
+		return self._scheduler
 
 
 	def initUserInfo(self, uid, groupid):
@@ -49,7 +57,7 @@ class Logger:
 		}
 
 
-	def setSearchMode(self, uid, groupid, isOpen:bool, mode:int, timeout = 0, func = None):
+	def setSearchMode(self, uid, groupid, isOpen:bool, mode:int, logger, timeout = 0, func = None):
 		if self.searchCount.get(getKey(uid, groupid)) == None:
 			self.initUserInfo(uid, groupid)
 		self.searchCount[getKey(uid, groupid)]["search"]["isOpen"] = isOpen
@@ -60,7 +68,7 @@ class Logger:
 			if func != None:
 				func()
 		if timeout != 0:
-			self.searchCount[getKey(uid, groupid)]["search"]["timer"] = startSchedule(timeout, resetSearchMode)
+			self.searchCount[getKey(uid, groupid)]["search"]["timer"] = startTimer(timeout, resetSearchMode)
 
 	def cancelSearchMode(self, uid, groupid):
 		if self.searchCount.get(getKey(uid, groupid)) == None:

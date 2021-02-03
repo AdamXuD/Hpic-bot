@@ -1,6 +1,6 @@
 from .logger import Logger
 from globalConfig import config
-from .utils import startSchedule, base64Decode
+from .utils import startTimer, base64Decode
 from .webRoute import shortenUrl, getSetuContent
 
 import re
@@ -88,7 +88,7 @@ async def sendSetu(context, replyFunc, logger, bot):
             ret = await replyFunc(bot, context, MessageSegment.image(picUrl))
             msgId = ret["message_id"] if ret and ret["message_id"] != None else 0
             if msgId and delTime > 0:
-                startSchedule(delTime, lambda: asyncio.run(bot.call_action("delete_msg", message_id=msgId)))
+                startTimer(delTime, lambda: asyncio.run(bot.call_action("delete_msg", message_id=msgId)))
         logger.doneSearch(context.user_id, context.group_id, "setu")
         return True
     else:

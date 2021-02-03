@@ -16,7 +16,7 @@ logger = Logger()
 startTime = time.time()
 
 if config["webRoute"]["enable"]:
-    webRouteStart(bot.server_app)
+    webRouteStart(bot.server_app, logger.scheduler)
 
 async def commonHandle(context):
     if config["setu"]["enable"] == True:
