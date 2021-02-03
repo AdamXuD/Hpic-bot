@@ -142,7 +142,7 @@ async def getPixivRanking(context, replyFunc, logger, bot):
                 url = await shortenUrl(await getRankingContent(imgList, queryType))
                 msg = ""
                 if dateStr == None:
-                    msg += "未指定日期，自动获取{}的{}榜单哦~\n"
+                    msg += "未指定日期，自动获取{0}的{1}榜榜单哦~\n".format(date, type)
                 msg += url
                 await replyFunc(bot, context, msg, True, True)
                 return True
