@@ -1,11 +1,12 @@
 from src.setu import sendSetu
-from src.utils import replyMsg ,isAtMe
+from src.utils import replyMsg ,isAtMe, baseReplyMsg
 from src.logger import Logger
 from globalConfig import config
 from src.webRoute import webRouteStart
 from src.antiBiliMiniApp import antiBiliMiniApp
 from src.picSearch import picSearch, openPicSearcherMode, closePicSearcherMode, hasImage
 from src.pixiv import searchPicById, getPixivRanking
+from src.corpus import corpus
 
 import uvicorn
 import time
@@ -34,6 +35,9 @@ async def commonHandle(context):
         if await searchPicById(context, replyMsg, logger, bot):
             return True
         if await getPixivRanking(context, replyMsg, logger, bot):
+            return True
+    if config["corpus"]["enable"] == True:
+        if await corpus(context, baseReplyMsg, logger, bot):
             return True
     return False
 

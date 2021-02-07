@@ -25,6 +25,10 @@ def base64Decode(text:str):
     return base64.b64decode(text).decode("utf-8")
 
 
+async def baseReplyMsg(bot, context:Event, msg):
+    return await bot.send(context, msg)
+
+
 async def replyMsg(bot, context : Event, msg, at = False, reply = False):
     message = Message()
     if context.detail_type != "private":
@@ -49,7 +53,7 @@ async def replyMsg(bot, context : Event, msg, at = False, reply = False):
             bot.logger.info("回复讨论组消息 discuss = " + str(context.discuss_id) + "qq = " + str(context.user_id) + "内容 = " + message.extract_plain_text());
     ret = None
     try:
-        ret = await bot.send(context, message)
+        ret = await baseReplyMsg(bot, context, message)
     except NetworkError as e:
         bot.logger.warning("发生网络错误。")
     return ret
