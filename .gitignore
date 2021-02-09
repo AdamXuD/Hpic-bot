@@ -3,5 +3,6 @@ __pycache__/
 .vs/
 .vscode/
 env/
+venv/
 redirect.db
 globalConfig.py
