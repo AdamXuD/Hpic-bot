@@ -14,11 +14,12 @@ api = None
 loginTime = None
 
 def loginToPixiv():
-    global api, loginTime
-    api = ByPassSniApi()
-    api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
-    api.login(config["pixiv"]["username"], config["pixiv"]["password"])
-    loginTime = time.time()
+    if config["pixiv"]["enable"]:
+        global api, loginTime
+        api = ByPassSniApi()
+        api.require_appapi_hosts(hostname="public-api.secure.pixiv.net")
+        api.login(config["pixiv"]["username"], config["pixiv"]["password"])
+        loginTime = time.time()
 
 
 async def searchPicById(context, replyFunc, logger, bot):
