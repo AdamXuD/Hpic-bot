@@ -41,8 +41,7 @@ async def searchPicById(context, replyFunc, logger, bot):
             title = needRes["title"]
             author = needRes["user"]["name"]
             pid = needRes["id"]
-            tags = [tag["name"] for tag in needRes["tags"]]
-            tagStr = " ".join(tags)
+            tagList = needRes["tags"]
             imgList = []
             if needRes["meta_pages"]:
                 for imgItem in needRes["meta_pages"]:
@@ -55,7 +54,7 @@ async def searchPicById(context, replyFunc, logger, bot):
                     imgList.append(needRes["meta_single_page"]["original_image_url"].replace("i.pximg.net", proxy))
                 else:
                     imgList.append(needRes["meta_single_page"]["original_image_url"])
-            url = await shortenUrl(await getPicSearchByIdContent(title, author, tagStr, pid, imgList))
+            url = await shortenUrl(await getPicSearchByIdContent(title, author, tagList, pid, imgList))
             await replyFunc(bot, context, url, True, True)
             return True
         elif result.get("error"):
@@ -133,7 +132,8 @@ async def getPixivRanking(context, replyFunc, logger, bot):
                     result = {
                         "title" : resultItem["title"],
                         "author" : resultItem["user"]["name"],
-                        "pid" : resultItem["id"]
+                        "pid" : resultItem["id"],
+                        "pixivUrl":'https://www.pixiv.net/artworks/' + str(resultItem["id"])
                     }
                     if proxy:
                         result["imgUrl"] = resultItem["image_urls"]["large"].replace("i.pximg.net", proxy)

@@ -35,8 +35,8 @@ async def get404Content(reason:str):
     return await render_template("404.html", reason=reason)
 
 
-async def getPicSearchByIdContent(title, author, tagStr, pid, imgList):
-    return await render_template("picSearchById.html", title=title, author=author, tagStr=tagStr, pid=pid, imgList=imgList)
+async def getPicSearchByIdContent(title, author, tagList, pid, imgList):
+    return await render_template("picSearchById.html", title=title, author=author, tagList=tagList, pid=pid, imgList=imgList, pixivUrl="https://www.pixiv.net/artworks/"+str(pid))
 
 
 async def getSetuContent(imgUrl):
