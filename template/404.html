@@ -13,6 +13,11 @@
                 <div>
                     <h1 class ="text-center">你图没了，爬！</h1>
                 </div>
+                {% if img %}
+                    <div>
+                        <img height="400px" width="400px" class="img-responsive img-rounded center-block" src="{{ img }}">
+                    </div>
+                {% endif %}
                 <div>
                     <p class ="text-center">原因：{{ reason }}</p>
                 </div>

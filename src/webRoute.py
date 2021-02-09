@@ -14,7 +14,9 @@ async def redirect(shortenUrl: str):
         if result:
             return Response(result[0], status=200)
         else:
-            return Response(await render_template("404.html", reason="该页面已失效"), status=404)
+            imgList = config["webRoute"]["404img"]
+            img = imgList[int(random.random() * len(imgList))] if imgList else None
+            return Response(await render_template("404.html", reason="该页面已失效", img = img), status=404)
 
 
 def dbCleanTask():
